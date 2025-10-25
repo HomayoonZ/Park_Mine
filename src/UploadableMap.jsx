@@ -9,6 +9,7 @@ import ControlButtons from "./components/ControlButtons";
 import FileUploadBox from "./components/FileUploadBox";
 import shp from "shpjs";
 import { GeoJSON } from "ol/format";
+import KML from "ol/format/KML";  // ✅ اضافه شد
 import { Vector as VectorSource } from "ol/source";
 
 function UploadableMap() {
@@ -97,6 +98,7 @@ function UploadableMap() {
         file.name.endsWith(".shx")
     );
     const isGeojson = fileList.some((file) => file.name.endsWith(".geojson"));
+    const isKML = fileList.some((file) => file.name.endsWith(".kml"));
 
     if (isShapefile) {
       const shpFile = fileList.find((file) => file.name.endsWith(".shp"));
@@ -156,8 +158,42 @@ function UploadableMap() {
       };
       reader.onerror = () => setError("خطا در خواندن فایل");
       reader.readAsText(geojsonFile);
+    } else if (isKML) {
+      // ✅ پشتیبانی از KML
+      const kmlFile = fileList.find((file) => file.name.endsWith(".kml"));
+      if (!kmlFile) {
+        setError("لطفاً فایل KML معتبر آپلود کنید");
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const text = event.target.result;
+
+        try {
+          // تبدیل KML به Features
+          const kmlFormat = new KML();
+          const parsedFeatures = kmlFormat.readFeatures(text, {
+            featureProjection: "EPSG:3857",
+          });
+
+          // ذخیره به صورت GeoJSON
+          const geojsonFormat = new GeoJSON();
+          const geojsonText = geojsonFormat.writeFeatures(parsedFeatures);
+          setSavedGeojsonData(geojsonText);
+
+          setFeatures(parsedFeatures);
+          setError(null);
+          setShowUpload(false);
+        } catch (error) {
+          console.error(error);
+          setError("فایل KML نامعتبر است");
+        }
+      };
+      reader.onerror = () => setError("خطا در خواندن فایل KML");
+      reader.readAsText(kmlFile);
     } else {
-      setError("لطفاً فایل GeoJSON یا Shapefile آپلود کنید");
+      setError("لطفاً فایل GeoJSON، Shapefile یا KML آپلود کنید");
     }
   }, []);
 
@@ -210,14 +246,9 @@ function UploadableMap() {
           setMouseCoord={setMouseCoord}
           setError={setError}
           layer={layer}
-          setLayer={setLayer}
           drawType={drawType}
-          setDrawType={setDrawType}
           isDrawing={isDrawing}
-          setIsDrawing={setIsDrawing}
           layerVisibility={layerVisibility}
-          setLayerVisibility={setLayerVisibility}
-          handleFileUpload={handleFileUpload}
           drawSource={drawSource}
           savedGeojsonData={savedGeojsonData}
           setSavedGeojsonData={setSavedGeojsonData}

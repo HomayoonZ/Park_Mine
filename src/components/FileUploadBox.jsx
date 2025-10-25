@@ -104,14 +104,14 @@ function FileUploadBox({ onFileUpload, onClose }) {
           id="file-input"
           type="file"
           multiple
-          accept=".geojson,.shp,.dbf,.shx"
+          accept=".geojson,.shp,.dbf,.shx,.kml"
           onChange={handleFileInput}
           style={{ display: "none" }}
         />
-        <p style={{ color: "#999", fontSize: "11px", marginTop: "20px" }}>
+        <p style={{ color: "#999", fontSize: "11px", marginTop: "20px", lineHeight: "1.6" }}>
           <strong>فرمت‌های پشتیبانی شده:</strong>
           <br />
-          GeoJSON | Shapefile (.shp, .dbf, .shx)
+          GeoJSON | Shapefile (.shp, .dbf, .shx) | KML
         </p>
       </div>
     </DraggableWrapper>
