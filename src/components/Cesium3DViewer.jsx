@@ -266,7 +266,7 @@ function Cesium3DViewer({ features, model3DUrl }) {
         <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.8)", zIndex: 10000, color: "white", fontSize: "18px" }}>
           <div style={{ textAlign: "center" }}>
             <div style={{ fontSize: "48px", marginBottom: "20px" }}>🌍</div>
-            <div>در حال بارگذاری نقشه 3D...</div>
+            <div> بارگذاری نقشه 3D...</div>
             {model3DUrl && <div style={{ fontSize: "12px", marginTop: "10px", opacity: 0.7 }}>بارگذاری مدل معدن...</div>}
           </div>
         </div>
