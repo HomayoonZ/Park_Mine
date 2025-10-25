@@ -4,14 +4,20 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#1E88E5" />
-    <meta
-      name="description"
-      content="React Map Application - GeoJSON and Shapefile Uploader"
+    <title>Park_Mine - نقشه‌ی جغرافیایی</title>
+    
+    <!-- ✅ Cesium CSS از CDN -->
+    <link
+      rel="stylesheet"
+      href="https://cesium.com/downloads/cesiumjs/releases/1.110/Build/Cesium/Widgets/widgets.css"
     />
-    <title>مدیریت اطلاعات مکانی معادن</title>
+    
+    <!-- ✅ تنظیم Cesium Base URL -->
+    <script>
+      window.CESIUM_BASE_URL = 'https://cesium.com/downloads/cesiumjs/releases/1.110/Build/Cesium/';
+    </script>
+    
     <link rel="manifest" href="/manifest.json" />
-    <link href="https://cesium.com/downloads/cesiumjs/releases/1.115/Widgets/widgets.css" rel="stylesheet">
-
   </head>
   <body>
     <noscript>نیاز به فعال کردن JavaScript دارید</noscript>
