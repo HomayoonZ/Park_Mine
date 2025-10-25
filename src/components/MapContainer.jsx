@@ -3,6 +3,7 @@ import Map from "ol/Map";
 import View from "ol/View";
 import TileLayer from "ol/layer/Tile";
 import OSM from "ol/source/OSM";
+import XYZ from "ol/source/XYZ";
 import VectorLayer from "ol/layer/Vector";
 import VectorSource from "ol/source/Vector";
 import GeoJSON from "ol/format/GeoJSON";
@@ -34,13 +35,26 @@ function MapContainer({
   const vectorLayerRef = useRef(null);
   const filteredLayerRef = useRef(null);
   const drawLayerRef = useRef(null);
-  const tileLayerRef = useRef(null);
+  const osmLayerRef = useRef(null);
+  const satelliteLayerRef = useRef(null);
 
   const tehranCoord = useMemo(() => fromLonLat([51.389, 35.6892]), []);
 
   const layers = useMemo(
     () => ({
-      osm: new TileLayer({ source: new OSM(), zIndex: 0 }),
+      osm: new TileLayer({
+        source: new OSM(),
+        zIndex: 0,
+        visible: true,
+      }),
+      satellite: new TileLayer({
+        source: new XYZ({
+          url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+          maxZoom: 19,
+        }),
+        zIndex: 0,
+        visible: false,
+      }),
     }),
     []
   );
@@ -75,8 +89,8 @@ function MapContainer({
   const drawStyle = useMemo(
     () =>
       new OlStyle({
-        stroke: new Stroke({ color: "#26A69A", width: 2.5 }),
-        fill: new Fill({ color: "rgba(38, 166, 154, 0.3)" }),
+        stroke: new Stroke({ color: "#FF6F00", width: 3 }),
+        fill: new Fill({ color: "rgba(255, 111, 0, 0.3)" }),
       }),
     []
   );
@@ -84,15 +98,15 @@ function MapContainer({
   const loadGeoJSON = useCallback(
     (geojsonText, mapInstance = map) => {
       if (!mapInstance) return;
-      
+
       try {
         const parsedFeatures = new GeoJSON().readFeatures(geojsonText, {
           featureProjection: "EPSG:3857",
         });
-        
+
         const source = new VectorSource({ features: parsedFeatures });
-        const vectorLayer = new VectorLayer({ 
-          source, 
+        const vectorLayer = new VectorLayer({
+          source,
           style: defaultStyle,
           zIndex: 10,
         });
@@ -108,18 +122,19 @@ function MapContainer({
         setFilteredFeatures(parsedFeatures);
 
         const keys = parsedFeatures.length
-          ? Object.keys(parsedFeatures[0].getProperties()).filter(k => k !== "geometry")
+          ? Object.keys(parsedFeatures[0].getProperties()).filter(
+              (k) => k !== "geometry"
+            )
           : [];
         setAttributeKeys(keys);
 
-        // Zoom به محدوده
         const extent = source.getExtent();
         mapInstance.getView().fit(extent, {
           padding: [100, 100, 100, 100],
           duration: 1000,
           maxZoom: 16,
         });
-        
+
         setError(null);
       } catch (error) {
         console.error("Error loading GeoJSON:", error);
@@ -129,7 +144,6 @@ function MapContainer({
     [defaultStyle, setFeatures, setFilteredFeatures, setAttributeKeys, setError, map]
   );
 
-  // ایجاد نقشه
   useEffect(() => {
     if (!mapRef.current) return;
 
@@ -140,7 +154,8 @@ function MapContainer({
       controls: [],
     });
 
-    tileLayerRef.current = layers.osm;
+    osmLayerRef.current = layers.osm;
+    satelliteLayerRef.current = layers.satellite;
 
     const drawLayer = new VectorLayer({
       source: drawSource,
@@ -149,7 +164,8 @@ function MapContainer({
     });
     drawLayerRef.current = drawLayer;
 
-    mapInstance.addLayer(tileLayerRef.current);
+    mapInstance.addLayer(osmLayerRef.current);
+    mapInstance.addLayer(satelliteLayerRef.current);
     mapInstance.addLayer(drawLayer);
 
     mapInstance.on("pointermove", (evt) => {
@@ -168,18 +184,19 @@ function MapContainer({
     };
   }, []);
 
-  // نمایش فیلترها
   useEffect(() => {
-    if (!map || !features.length) return;
+    if (!map) return;
 
-    // حذف لایه قبلی
     if (filteredLayerRef.current) {
       map.removeLayer(filteredLayerRef.current);
       filteredLayerRef.current = null;
     }
 
-    // اگه فیلتر اعمال شده
-    if (filteredFeatures.length > 0 && filteredFeatures.length < features.length) {
+    if (
+      filteredFeatures &&
+      filteredFeatures.length > 0 &&
+      filteredFeatures.length < features.length
+    ) {
       const filteredSource = new VectorSource({ features: filteredFeatures });
       const filteredLayer = new VectorLayer({
         source: filteredSource,
@@ -190,7 +207,6 @@ function MapContainer({
       map.addLayer(filteredLayer);
       filteredLayerRef.current = filteredLayer;
 
-      // Zoom به فیلترشده‌ها
       const extent = filteredSource.getExtent();
       map.getView().fit(extent, {
         padding: [100, 100, 100, 100],
@@ -200,35 +216,12 @@ function MapContainer({
     }
   }, [map, filteredFeatures, features, filteredStyle]);
 
-  // مدیریت visibility
-  useEffect(() => {
-    if (!map) return;
-
-    const allLayers = map.getLayers().getArray();
-    allLayers.forEach(l => {
-      if (l !== tileLayerRef.current) {
-        map.removeLayer(l);
-      }
-    });
-
-    if (vectorLayerRef.current && layerVisibility.main) {
-      map.addLayer(vectorLayerRef.current);
-    }
-    if (filteredLayerRef.current && layerVisibility.main) {
-      map.addLayer(filteredLayerRef.current);
-    }
-    if (drawLayerRef.current && layerVisibility.drawings) {
-      map.addLayer(drawLayerRef.current);
-    }
-  }, [map, layerVisibility]);
-
-  // بارگذاری features جدید
   useEffect(() => {
     if (!map || !features.length) return;
 
     const source = new VectorSource({ features });
-    const vectorLayer = new VectorLayer({ 
-      source, 
+    const vectorLayer = new VectorLayer({
+      source,
       style: defaultStyle,
       zIndex: 10,
     });
@@ -241,14 +234,14 @@ function MapContainer({
     vectorLayerRef.current = vectorLayer;
 
     const extent = source.getExtent();
-    map.getView().fit(extent, { 
-      padding: [100, 100, 100, 100], 
+    map.getView().fit(extent, {
+      padding: [100, 100, 100, 100],
       duration: 1000,
       maxZoom: 16,
     });
 
     const keys = features.length
-      ? Object.keys(features[0].getProperties()).filter(k => k !== "geometry")
+      ? Object.keys(features[0].getProperties()).filter((k) => k !== "geometry")
       : [];
     setAttributeKeys(keys);
   }, [map, features, defaultStyle, setAttributeKeys]);

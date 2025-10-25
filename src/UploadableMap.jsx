@@ -7,9 +7,10 @@ import FilterPanel from "./components/FilterPanel";
 import FeatureTable from "./components/FeatureTable";
 import ControlButtons from "./components/ControlButtons";
 import FileUploadBox from "./components/FileUploadBox";
+import LayerSwitcher from "./components/LayerSwitcher";
 import shp from "shpjs";
 import { GeoJSON } from "ol/format";
-import KML from "ol/format/KML";  // ✅ اضافه شد
+import KML from "ol/format/KML";
 import { Vector as VectorSource } from "ol/source";
 
 function UploadableMap() {
@@ -159,7 +160,6 @@ function UploadableMap() {
       reader.onerror = () => setError("خطا در خواندن فایل");
       reader.readAsText(geojsonFile);
     } else if (isKML) {
-      // ✅ پشتیبانی از KML
       const kmlFile = fileList.find((file) => file.name.endsWith(".kml"));
       if (!kmlFile) {
         setError("لطفاً فایل KML معتبر آپلود کنید");
@@ -171,13 +171,11 @@ function UploadableMap() {
         const text = event.target.result;
 
         try {
-          // تبدیل KML به Features
           const kmlFormat = new KML();
           const parsedFeatures = kmlFormat.readFeatures(text, {
             featureProjection: "EPSG:3857",
           });
 
-          // ذخیره به صورت GeoJSON
           const geojsonFormat = new GeoJSON();
           const geojsonText = geojsonFormat.writeFeatures(parsedFeatures);
           setSavedGeojsonData(geojsonText);
@@ -254,7 +252,7 @@ function UploadableMap() {
           setSavedGeojsonData={setSavedGeojsonData}
         />
 
-        {/* مختصات موس */}
+        {/* مختصات */}
         {mouseCoord && (
           <div
             style={{
@@ -278,7 +276,7 @@ function UploadableMap() {
         )}
       </div>
 
-      {/* دکمه‌های کنترل */}
+      {/* دکمه‌ها */}
       <ControlButtons
         map={map}
         setShowFilter={setShowFilter}
@@ -287,7 +285,10 @@ function UploadableMap() {
         setShowDrawPanel={setShowDrawPanel}
       />
 
-      {/* پنل‌های Draggable */}
+      {/* تعویض لایه */}
+      <LayerSwitcher map={map} />
+
+      {/* پنل‌ها */}
       {showUpload && (
         <FileUploadBox
           onFileUpload={handleFileUpload}
@@ -313,22 +314,27 @@ function UploadableMap() {
           filteredFeatures={filteredFeatures}
           zoomToFeature={zoomToFeature}
           onClose={() => setShowTable(false)}
-          isFiltered={filteredFeatures.length < features.length && features.length > 0}
+          isFiltered={
+            filteredFeatures.length < features.length && features.length > 0
+          }
         />
       )}
 
-      {/* DrawPanel */}
-      <DrawPanel
-        map={map}
-        drawType={drawType}
-        setDrawType={setDrawType}
-        isDrawing={isDrawing}
-        setIsDrawing={setIsDrawing}
-        setError={setError}
-        drawSource={drawSource}
-      />
+      {showDrawPanel && (
+        <DrawPanel
+          map={map}
+          drawType={drawType}
+          setDrawType={setDrawType}
+          isDrawing={isDrawing}
+          setIsDrawing={setIsDrawing}
+          setError={setError}
+          drawSource={drawSource}
+          showDrawPanel={showDrawPanel}
+          onClose={() => setShowDrawPanel(false)}
+        />
+      )}
 
-      {/* پیام خطا */}
+      {/* خطا */}
       {error && (
         <div
           style={{
@@ -345,7 +351,6 @@ function UploadableMap() {
             alignItems: "center",
             gap: "15px",
             maxWidth: "450px",
-            animation: "slideIn 0.3s ease",
           }}
         >
           <span style={{ fontSize: "20px" }}>⚠️</span>
