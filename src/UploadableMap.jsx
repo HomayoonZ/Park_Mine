@@ -8,6 +8,7 @@ import FeatureTable from "./components/FeatureTable";
 import ControlButtons from "./components/ControlButtons";
 import FileUploadBox from "./components/FileUploadBox";
 import LayerSwitcher from "./components/LayerSwitcher";
+import Cesium3DViewer from "./components/Cesium3DViewer";
 import shp from "shpjs";
 import { GeoJSON } from "ol/format";
 import KML from "ol/format/KML";
@@ -25,6 +26,7 @@ function UploadableMap() {
   const [showTable, setShowTable] = useState(false);
   const [showUpload, setShowUpload] = useState(false);
   const [showDrawPanel, setShowDrawPanel] = useState(false);
+  const [show3D, setShow3D] = useState(false);
   const [mouseCoord, setMouseCoord] = useState(null);
   const [error, setError] = useState(null);
   const [layer, setLayer] = useState("osm");
@@ -229,109 +231,161 @@ function UploadableMap() {
         flexDirection: "column",
       }}
     >
-      {/* نقشه */}
-      <div style={{ flex: 1, width: "100%", height: "100%", position: "relative" }}>
-        <MapContainer
-          map={map}
-          setMap={setMap}
-          features={features}
-          setFeatures={setFeatures}
-          filteredFeatures={filteredFeatures}
-          setFilteredFeatures={setFilteredFeatures}
-          selectedFeatures={selectedFeatures}
-          setSelectedFeatures={setSelectedFeatures}
-          setAttributeKeys={setAttributeKeys}
-          setMouseCoord={setMouseCoord}
-          setError={setError}
-          layer={layer}
-          drawType={drawType}
-          isDrawing={isDrawing}
-          layerVisibility={layerVisibility}
-          drawSource={drawSource}
-          savedGeojsonData={savedGeojsonData}
-          setSavedGeojsonData={setSavedGeojsonData}
-        />
-
-        {/* مختصات */}
-        {mouseCoord && (
-          <div
+      {/* 3D Mode */}
+      {show3D && (
+        <div
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: "100%",
+            zIndex: 5000,
+            background: "white",
+          }}
+        >
+          <button
+            onClick={() => setShow3D(false)}
             style={{
               position: "absolute",
-              bottom: "15px",
-              left: "15px",
-              background: "rgba(255, 255, 255, 0.95)",
-              padding: "10px 16px",
+              top: "20px",
+              right: "20px",
+              zIndex: 5001,
+              background: "linear-gradient(135deg, #C2185B 0%, #AD1457 100%)",
+              color: "white",
+              border: "none",
+              padding: "12px 24px",
               borderRadius: "8px",
-              fontSize: "12px",
-              fontFamily: "monospace",
-              boxShadow: "0 2px 8px rgba(0, 0, 0, 0.2)",
-              zIndex: 8000,
-              direction: "ltr",
-              border: "1px solid #ddd",
+              cursor: "pointer",
+              fontWeight: "600",
+              fontSize: "14px",
+              boxShadow: "0 4px 12px rgba(0, 0, 0, 0.3)",
+              transition: "all 0.2s",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = "translateY(-2px)";
+              e.currentTarget.style.boxShadow = "0 6px 16px rgba(0, 0, 0, 0.4)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = "translateY(0)";
+              e.currentTarget.style.boxShadow = "0 4px 12px rgba(0, 0, 0, 0.3)";
             }}
           >
-            <strong>طول:</strong> {mouseCoord[0].toFixed(5)} |{" "}
-            <strong>عرض:</strong> {mouseCoord[1].toFixed(5)}
+            ❌ بازگشت به 2D
+          </button>
+          <Cesium3DViewer features={features} />
+        </div>
+      )}
+
+      {/* 2D Mode */}
+      {!show3D && (
+        <>
+          {/* نقشه */}
+          <div style={{ flex: 1, width: "100%", height: "100%", position: "relative" }}>
+            <MapContainer
+              map={map}
+              setMap={setMap}
+              features={features}
+              setFeatures={setFeatures}
+              filteredFeatures={filteredFeatures}
+              setFilteredFeatures={setFilteredFeatures}
+              selectedFeatures={selectedFeatures}
+              setSelectedFeatures={setSelectedFeatures}
+              setAttributeKeys={setAttributeKeys}
+              setMouseCoord={setMouseCoord}
+              setError={setError}
+              layer={layer}
+              drawType={drawType}
+              isDrawing={isDrawing}
+              layerVisibility={layerVisibility}
+              drawSource={drawSource}
+              savedGeojsonData={savedGeojsonData}
+              setSavedGeojsonData={setSavedGeojsonData}
+            />
+
+            {/* مختصات */}
+            {mouseCoord && (
+              <div
+                style={{
+                  position: "absolute",
+                  bottom: "15px",
+                  left: "15px",
+                  background: "rgba(255, 255, 255, 0.95)",
+                  padding: "10px 16px",
+                  borderRadius: "8px",
+                  fontSize: "12px",
+                  fontFamily: "monospace",
+                  boxShadow: "0 2px 8px rgba(0, 0, 0, 0.2)",
+                  zIndex: 8000,
+                  direction: "ltr",
+                  border: "1px solid #ddd",
+                }}
+              >
+                <strong>طول:</strong> {mouseCoord[0].toFixed(5)} |{" "}
+                <strong>عرض:</strong> {mouseCoord[1].toFixed(5)}
+              </div>
+            )}
           </div>
-        )}
-      </div>
 
-      {/* دکمه‌ها */}
-      <ControlButtons
-        map={map}
-        setShowFilter={setShowFilter}
-        setShowTable={setShowTable}
-        setShowUpload={setShowUpload}
-        setShowDrawPanel={setShowDrawPanel}
-      />
+          {/* دکمه‌ها */}
+          <ControlButtons
+            map={map}
+            setShowFilter={setShowFilter}
+            setShowTable={setShowTable}
+            setShowUpload={setShowUpload}
+            setShowDrawPanel={setShowDrawPanel}
+            setShow3D={setShow3D}
+          />
 
-      {/* تعویض لایه */}
-      <LayerSwitcher map={map} />
+          {/* تعویض لایه */}
+          <LayerSwitcher map={map} />
 
-      {/* پنل‌ها */}
-      {showUpload && (
-        <FileUploadBox
-          onFileUpload={handleFileUpload}
-          onClose={() => setShowUpload(false)}
-        />
-      )}
+          {/* پنل‌های Draggable */}
+          {showUpload && (
+            <FileUploadBox
+              onFileUpload={handleFileUpload}
+              onClose={() => setShowUpload(false)}
+            />
+          )}
 
-      {showFilter && (
-        <FilterPanel
-          filters={filters}
-          setFilters={setFilters}
-          filterLogic={filterLogic}
-          setFilterLogic={setFilterLogic}
-          applyFilters={applyFilters}
-          clearFilters={clearFilters}
-          attributeKeys={attributeKeys}
-          onClose={() => setShowFilter(false)}
-        />
-      )}
+          {showFilter && (
+            <FilterPanel
+              filters={filters}
+              setFilters={setFilters}
+              filterLogic={filterLogic}
+              setFilterLogic={setFilterLogic}
+              applyFilters={applyFilters}
+              clearFilters={clearFilters}
+              attributeKeys={attributeKeys}
+              onClose={() => setShowFilter(false)}
+            />
+          )}
 
-      {showTable && (
-        <FeatureTable
-          filteredFeatures={filteredFeatures}
-          zoomToFeature={zoomToFeature}
-          onClose={() => setShowTable(false)}
-          isFiltered={
-            filteredFeatures.length < features.length && features.length > 0
-          }
-        />
-      )}
+          {showTable && (
+            <FeatureTable
+              filteredFeatures={filteredFeatures}
+              zoomToFeature={zoomToFeature}
+              onClose={() => setShowTable(false)}
+              isFiltered={
+                filteredFeatures.length < features.length && features.length > 0
+              }
+            />
+          )}
 
-      {showDrawPanel && (
-        <DrawPanel
-          map={map}
-          drawType={drawType}
-          setDrawType={setDrawType}
-          isDrawing={isDrawing}
-          setIsDrawing={setIsDrawing}
-          setError={setError}
-          drawSource={drawSource}
-          showDrawPanel={showDrawPanel}
-          onClose={() => setShowDrawPanel(false)}
-        />
+          {showDrawPanel && (
+            <DrawPanel
+              map={map}
+              drawType={drawType}
+              setDrawType={setDrawType}
+              isDrawing={isDrawing}
+              setIsDrawing={setIsDrawing}
+              setError={setError}
+              drawSource={drawSource}
+              showDrawPanel={showDrawPanel}
+              onClose={() => setShowDrawPanel(false)}
+            />
+          )}
+        </>
       )}
 
       {/* خطا */}
@@ -351,6 +405,7 @@ function UploadableMap() {
             alignItems: "center",
             gap: "15px",
             maxWidth: "450px",
+            animation: "slideIn 0.3s ease",
           }}
         >
           <span style={{ fontSize: "20px" }}>⚠️</span>
@@ -365,7 +420,10 @@ function UploadableMap() {
               cursor: "pointer",
               padding: "0 8px",
               lineHeight: 1,
+              transition: "all 0.2s",
             }}
+            onMouseEnter={(e) => (e.target.style.background = "rgba(255, 255, 255, 0.3)")}
+            onMouseLeave={(e) => (e.target.style.background = "rgba(255, 255, 255, 0.2)")}
           >
             ✕
           </button>
