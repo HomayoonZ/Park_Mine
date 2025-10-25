@@ -1,0 +1,240 @@
+/* پالت رنگی خاص (تم معدنی و آینده‌نگر) */
+:root {
+  --primary: #1E88E5; /* آبی فیروزه‌ای */
+  --secondary: #ECEFF1; /* خاکستری نقره‌ای */
+  --accent: #FF6F00; /* نارنجی کهربایی */
+  --danger: #C2185B; /* صورتی یاقوتی */
+  --success: #26A69A; /* سبز فیروزه‌ای */
+  --highlight: #B0BEC5; /* خاکستری متالیک */
+  --background: #FAFAFA; /* سفید مایل به خاکستری */
+  --text: #263238; /* آبی-خاکستری تیره */
+}
+
+/* استایل کلی */
+body {
+  background: var(--background);
+  color: var(--text);
+  font-family: 'Vazirmatn', 'IRANSansX', sans-serif;
+  direction: rtl;
+  min-height: 100vh;
+  margin: 0;
+}
+
+/* استایل نقشه */
+.map-container {
+  width: 100%;
+  height: 600px;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  z-index: 1;
+  position: relative;
+}
+.vector-layer {
+  stroke: var(--primary);
+  fill: rgba(30, 136, 229, 0.3);
+}
+.draw-layer {
+  stroke: var(--accent);
+  fill: rgba(255, 111, 0, 0.3);
+}
+.selected-feature {
+  stroke: var(--danger);
+  fill: rgba(194, 24, 91, 0.4);
+}
+
+/* استایل navbar */
+.navbar {
+  background: linear-gradient(to right, var(--primary), #1565C0);
+  padding: 15px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  border-radius: 0 0 10px 10px;
+}
+.nav-link, .navbar-text {
+  color: var(--background) !important;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.nav-link:hover {
+  color: var(--accent) !important;
+  transform: scale(1.1);
+}
+.dropdown-menu {
+  background: var(--secondary);
+  border: none;
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+}
+.dropdown-item:hover {
+  background: linear-gradient(to right, var(--primary), #1565C0);
+  color: var(--background);
+}
+
+/* استایل کارت‌ها */
+.card {
+  background: var(--secondary);
+  border-radius: 15px;
+  box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+  border: 1px solid var(--highlight);
+}
+.card-header {
+  background: linear-gradient(to right, var(--primary), var(--success));
+  color: var(--background);
+  border-radius: 15px 15px 0 0;
+  padding: 12px;
+  text-align: center;
+  font-weight: 800;
+  font-size: 1.2rem;
+}
+.card-body {
+  padding: 15px;
+}
+
+/* استایل دکمه‌ها */
+.btn-primary {
+  background: linear-gradient(to right, var(--primary), #1565C0);
+  border: none;
+  color: var(--background);
+}
+.btn-danger {
+  background: linear-gradient(to right, var(--danger), #AD1457);
+  border: none;
+  color: var(--background);
+}
+.btn-success {
+  background: linear-gradient(to right, var(--success), #00897B);
+  border: none;
+  color: var(--background);
+}
+.btn-accent {
+  background: linear-gradient(to right, var(--accent), #EF6C00);
+  border: none;
+  color: var(--background);
+}
+.btn-highlight {
+  background: linear-gradient(to right, var(--highlight), #90A4AE);
+  border: none;
+  color: var(--text);
+}
+.btn-sm {
+  border-radius: 10px;
+  padding: 8px 14px;
+  font-size: 0.95rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+}
+.btn-sm:hover {
+  transform: scale(1.08);
+  box-shadow: 0 5px 12px rgba(0,0,0,0.2);
+}
+
+/* استایل‌های خاص دکمه‌ها */
+.btn-zoom-in { background: linear-gradient(to right, var(--primary), #1565C0); }
+.btn-zoom-out { background: linear-gradient(to right, var(--accent), #EF6C00); }
+.btn-tehran { background: linear-gradient(to right, var(--success), #00897B); }
+.btn-filter { background: linear-gradient(to right, var(--primary), #1565C0); }
+.btn-table { background: linear-gradient(to right, var(--danger), #AD1457); }
+.btn-upload { background: linear-gradient(to right, var(--accent), #EF6C00); }
+.btn-layers { background: linear-gradient(to right, var(--highlight), #90A4AE); }
+.btn-draw { background: linear-gradient(to right, var(--danger), #AD1457); }
+.btn-3d { background: linear-gradient(to right, var(--success), #00897B); }
+
+/* استایل فرم‌ها */
+.form-select, .form-control {
+  border-radius: 8px;
+  border: 1px solid var(--highlight);
+  padding: 8px;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+.form-select:focus, .form-control:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 8px rgba(30, 136, 229, 0.4);
+}
+
+/* استایل پنل‌های draggable */
+.draggable-panel {
+  background: var(--secondary);
+  border-radius: 15px;
+  box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+  border: 1px solid var(--highlight);
+  cursor: move;
+  z-index: 10;
+}
+.draggable-panel:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 12px 24px rgba(0,0,0,0.2);
+  border-color: var(--accent);
+}
+
+/* استایل اعلان‌ها */
+.alert {
+  background: linear-gradient(to right, var(--danger), #AD1457);
+  color: var(--background);
+  border-radius: 8px;
+  z-index: 100;
+}
+.alert .btn-close {
+  filter: invert(1);
+}
+
+/* استایل footer */
+.footer {
+  background: linear-gradient(to right, var(--primary), var(--success));
+  color: var(--background);
+  padding: 20px 0;
+  border-radius: 10px 10px 0 0;
+  box-shadow: 0 -4px 10px rgba(0,0,0,0.2);
+}
+.footer a {
+  color: var(--accent);
+}
+.footer a:hover {
+  color: var(--background);
+}
+
+/* استایل مودال */
+.modal-content {
+  background: var(--secondary);
+  border: 1px solid var(--highlight);
+  border-radius: 15px;
+}
+.modal-header {
+  background: linear-gradient(to right, var(--primary), var(--success));
+  color: var(--background);
+}
+.modal-body {
+  background: var(--background);
+}
+
+/* استایل Cesium */
+.cesium-viewer {
+  width: 100%;
+  height: 100%;
+}
+.vr-button {
+  background: linear-gradient(to right, var(--primary), #1565C0);
+  color: var(--background);
+}
+.close-button {
+  background: linear-gradient(to right, var(--danger), #AD1457);
+  color: var(--background);
+}
+.error-alert {
+  background: linear-gradient(to right, var(--danger), #AD1457);
+  color: var(--background);
+}
+.loading {
+  color: var(--primary);
+}
+
+/* استایل جدول */
+.table {
+  background: var(--secondary);
+}
+.table-striped > tbody > tr:nth-of-type(odd) > * {
+  background: rgba(30, 136, 229, 0.1);
+}

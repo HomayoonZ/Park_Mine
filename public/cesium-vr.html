@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>نقشه سه‌بعدی تهران</title>
+  <script src="/cesium/Cesium.js"></script>
+  <link href="/cesium/Widgets/widgets.css" rel="stylesheet">
+  <style>
+    html, body, #cesiumContainer {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      font-family: 'Vazirmatn', sans-serif;
+    }
+    @import url('https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css');
+    .cesium-viewer {
+      height: 100vh;
+    }
+    .vr-button {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      z-index: 1000;
+      background: linear-gradient(to right, #0288d1, #01579b);
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-family: 'Vazirmatn', sans-serif;
+      cursor: pointer;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .vr-button:hover {
+      transform: scale(1.1);
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    }
+  </style>
+</head>
+<body>
+  <div id="cesiumContainer"></div>
+  <button class="vr-button" onclick="viewer.scene.requestRenderMode = true; viewer.scene.render();">وارد VR شوید</button>
+  <script>
+    Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJlYTAzYWRlNi1lYTdkLTRjOGItOGI0OS0xMTUxNGI4NmM0ZTciLCJpZCI6MjY1Mjk0LCJpYXQiOjE3MzUzMDk4NDZ9.Y5NbdpjOjQX3BvNpEffM3ED4Lq-yO0ncdqA-fA12alA'; // Replace with your Cesium Ion token
+    const viewer = new Cesium.Viewer('cesiumContainer', {
+      terrain: Cesium.Terrain.fromWorldTerrain(),
+      imageryProvider: new Cesium.IonImageryProvider({ assetId: 2 }),
+      baseLayerPicker: true,
+      geocoder: true,
+      homeButton: true,
+      sceneModePicker: true,
+      navigationHelpButton: true,
+      animation: true,
+      timeline: true,
+      fullscreenButton: true,
+      vrButton: true
+    });
+
+    viewer.scene.globe.enableLighting = true;
+    viewer.scene.globe.depthTestAgainstTerrain = true;
+
+    viewer.camera.flyTo({
+      destination: Cesium.Cartesian3.fromDegrees(51.3890, 35.6892, 15000),
+      orientation: {
+        heading: Cesium.Math.toRadians(0),
+        pitch: Cesium.Math.toRadians(-45),
+        roll: 0.0
+      },
+      duration: 3
+    });
+
+    viewer.scene.postUpdate.addEventListener(() => {
+      if (viewer.scene.xr && viewer.scene.xr.enabled) {
+        viewer.scene.requestRender();
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,15 @@
+@font-face {
+  font-family: 'Vazirmatn';
+  src: url('./assets/Vazirmatn.woff2') format('woff2');
+}
+
+
+ @font-face {
+  font-family: 'IRANSansX';
+  src: url('./assets/IRANSansX.woff2') format('woff2');
+} 
+
+body {
+  direction: rtl;
+  font-family: 'Vazirmatn', sans-serif; /* یا IRANSansX */
+}
