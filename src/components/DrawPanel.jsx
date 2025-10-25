@@ -3,19 +3,27 @@ import { Draw, Modify } from "ol/interaction";
 import { Vector as VectorSource } from "ol/source";
 import { Vector as VectorLayer } from "ol/layer";
 import { Fill, Stroke, Style as OlStyle } from "ol/style";
+import GeoJSON from "ol/format/GeoJSON";
 import "../styles.css";
 import "../GeoProject.css";
 
-function DrawPanel({ map, drawType, setDrawType, isDrawing, setIsDrawing, setError }) {
+function DrawPanel({
+  map,
+  drawType,
+  setDrawType,
+  isDrawing,
+  setIsDrawing,
+  setError,
+  drawSource,
+}) {
   useEffect(() => {
-    if (!map || !drawType) return;
+    if (!map || !drawType || !drawSource) return;
 
-    const drawSource = new VectorSource();
     const drawLayer = new VectorLayer({
       source: drawSource,
       style: new OlStyle({
-        stroke: new Stroke({ color: "#FF6F00", width: 2 }),
-        fill: new Fill({ color: "rgba(255, 111, 0, 0.3)" }),
+        stroke: new Stroke({ color: "#26A69A", width: 2.5 }),
+        fill: new Fill({ color: "rgba(38, 166, 154, 0.3)" }),
       }),
     });
 
@@ -23,43 +31,28 @@ function DrawPanel({ map, drawType, setDrawType, isDrawing, setIsDrawing, setErr
       source: drawSource,
       type: drawType,
       style: new OlStyle({
-        stroke: new Stroke({ color: "#FF6F00", width: 2 }),
-        fill: new Fill({ color: "rgba(255, 111, 0, 0.3)" }),
+        stroke: new Stroke({ color: "#26A69A", width: 2.5 }),
+        fill: new Fill({ color: "rgba(38, 166, 154, 0.3)" }),
       }),
     });
 
     const modifyInteraction = new Modify({ source: drawSource });
 
     drawInteraction.on("drawend", (event) => {
-      const features = drawSource.getFeatures();
-      const geojson = new (require("ol/format/GeoJSON"))().writeFeatures(features, { featureProjection: "EPSG:3857" });
-      localStorage.setItem("drawings", geojson);
       setIsDrawing(false);
       setDrawType(null);
     });
 
     map.addInteraction(drawInteraction);
     map.addInteraction(modifyInteraction);
-    map.addLayer(drawLayer);
 
     return () => {
       map.removeInteraction(drawInteraction);
       map.removeInteraction(modifyInteraction);
-      map.removeLayer(drawLayer);
     };
-  }, [map, drawType, setIsDrawing, setDrawType, setError]);
+  }, [map, drawType, setIsDrawing, setDrawType, setError, drawSource]);
 
-  return (
-    <div className="card draggable-panel" draggable="true">
-      <div className="card-header">ابزار ترسیم</div>
-      <div className="card-body">
-        <button className="btn btn-accent" onClick={() => { setDrawType("Point"); setIsDrawing(true); }}>نقطه</button>
-        <button className="btn btn-accent" onClick={() => { setDrawType("LineString"); setIsDrawing(true); }}>خط</button>
-        <button className="btn btn-accent" onClick={() => { setDrawType("Polygon"); setIsDrawing(true); }}>چندضلعی</button>
-        <button className="btn btn-danger" onClick={() => { setDrawType(null); setIsDrawing(false); }}>لغو</button>
-      </div>
-    </div>
-  );
+  return null;
 }
 
 export default DrawPanel;

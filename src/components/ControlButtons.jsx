@@ -1,35 +1,91 @@
 import "../styles.css";
-import { fromLonLat } from "ol/proj";
 
-function ControlButtons({ map, setShowFilter, setShowTable, setShowUpload, setShowLayerControl, setShowDrawPanel, setShowCesium }) {
+function ControlButtons({
+  map,
+  setShowFilter,
+  setShowTable,
+  setShowUpload,
+  setShowDrawPanel,
+}) {
+  const buttonStyle = {
+    background: "linear-gradient(135deg, #1E88E5 0%, #26A69A 100%)",
+    color: "white",
+    border: "1px solid rgba(255, 255, 255, 0.2)",
+    padding: "12px 18px",
+    borderRadius: "10px",
+    cursor: "pointer",
+    fontSize: "13px",
+    fontWeight: "500",
+    boxShadow: "0 4px 12px rgba(30, 136, 229, 0.3)",
+    transition: "all 0.3s ease",
+    display: "flex",
+    alignItems: "center",
+    gap: "10px",
+    minWidth: "150px",
+    justifyContent: "center",
+  };
+
+  const handleMouseEnter = (e) => {
+    e.currentTarget.style.transform = "translateY(-3px) scale(1.02)";
+    e.currentTarget.style.boxShadow =
+      "0 6px 20px rgba(30, 136, 229, 0.5)";
+  };
+
+  const handleMouseLeave = (e) => {
+    e.currentTarget.style.transform = "translateY(0) scale(1)";
+    e.currentTarget.style.boxShadow = "0 4px 12px rgba(30, 136, 229, 0.3)";
+  };
+
   return (
-    <div className="d-flex flex-wrap gap-2 mb-3">
-      <button className="btn btn-zoom-in btn-sm" onClick={() => map?.getView().setZoom(map.getView().getZoom() + 1)}>
-        <i className="fas fa-plus me-2"></i>بزرگ‌نمایی
+    <div
+      style={{
+        position: "fixed",
+        top: "20px",
+        left: "20px",
+        zIndex: 9000,
+        display: "flex",
+        flexDirection: "column",
+        gap: "12px",
+      }}
+    >
+      <button
+        style={buttonStyle}
+        onClick={() => setShowUpload((prev) => !prev)}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+      >
+        <span style={{ fontSize: "18px" }}>📁</span>
+        <span>آپلود فایل</span>
       </button>
-      <button className="btn btn-zoom-out btn-sm" onClick={() => map?.getView().setZoom(map.getView().getZoom() - 1)}>
-        <i className="fas fa-minus me-2"></i>کوچک‌نمایی
+
+      <button
+        style={buttonStyle}
+        onClick={() => setShowFilter((prev) => !prev)}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+      >
+        <span style={{ fontSize: "18px" }}>🔍</span>
+        <span>فیلتر</span>
       </button>
-      <button className="btn btn-tehran btn-sm" onClick={() => map?.getView().setCenter(fromLonLat([51.3890, 35.6892]))}>
-        <i className="fas fa-map-marker-alt me-2"></i>تهران
+
+      <button
+        style={buttonStyle}
+        onClick={() => setShowTable((prev) => !prev)}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+      >
+        <span style={{ fontSize: "18px" }}>📊</span>
+        <span>جدول داده</span>
       </button>
-      <button className="btn btn-filter btn-sm" onClick={() => setShowFilter((prev) => !prev)}>
-        <i className="fas fa-filter me-2"></i>فیلتر
-      </button>
-      <button className="btn btn-table btn-sm" onClick={() => setShowTable((prev) => !prev)}>
-        <i className="fas fa-table me-2"></i>جدول
-      </button>
-      <button className="btn btn-upload btn-sm" onClick={() => setShowUpload((prev) => !prev)}>
-        <i className="fas fa-upload me-2"></i>آپلود
-      </button>
-      <button className="btn btn-layers btn-sm" onClick={() => setShowLayerControl((prev) => !prev)}>
-        <i className="fas fa-layer-group me-2"></i>لایه‌ها
-      </button>
-      <button className="btn btn-draw btn-sm" onClick={() => setShowDrawPanel((prev) => !prev)}>
-        <i className="fas fa-pencil-alt me-2"></i>ترسیم
-      </button>
-      <button className="btn btn-3d btn-sm" onClick={() => setShowCesium(true)}>
-        <i className="fas fa-cube me-2"></i>نقشه سه‌بعدی
+
+      <button
+        style={buttonStyle}
+        onClick={() => setShowDrawPanel((prev) => !prev)}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+      >
+        <span style={{ fontSize: "18px" }}>✏️</span>
+        <span>رسم روی نقشه</span>
       </button>
     </div>
   );

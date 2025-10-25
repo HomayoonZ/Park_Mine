@@ -1,13 +1,11 @@
-import react from 'react';
-import reactDom from 'react-dom/client';
+import React from "react";
+import ReactDOM from "react-dom/client";
 import "@fontsource/vazir";
+import GeoProject from "./GeoProject";
 
-import GeoProject from './GeoProject';
-
-const root= reactDom.createRoot(document.getElementById("root"));
+const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
-     <react.StrictMode>
-        <GeoProject/>
-    </react.StrictMode>
-)
-
+  <React.StrictMode>
+    <GeoProject />
+  </React.StrictMode>
+);

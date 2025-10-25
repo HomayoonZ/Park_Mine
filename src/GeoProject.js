@@ -1,24 +1,15 @@
-
-import UploadableMap from './UploadableMap';
-
+import UploadableMap from "./UploadableMap";
 import "@fontsource/vazir";
-import 'bootstrap/dist/css/bootstrap.min.css';
-import './styles.css'
+import "bootstrap/dist/css/bootstrap.min.css";
+import "./styles.css";
+import "./GeoProject.css";
 
-import './GeoProject.css';
 const GeoProject = () => {
-
-    return(
-        <div className='GeoProject'>
-
-
-            
-            <br/> 
-            <UploadableMap/>
-            <br/>
-            
-        </div>
-    )
-}   
+  return (
+    <div className="GeoProject">
+      <UploadableMap />
+    </div>
+  );
+};
 
 export default GeoProject;

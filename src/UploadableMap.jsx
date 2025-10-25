@@ -2,18 +2,14 @@ import { useState, useEffect, useCallback } from "react";
 import "./styles.css";
 import "./GeoProject.css";
 import MapContainer from "./components/MapContainer";
-import NavBar from "./components/NavBar";
-import ControlButtons from "./components/ControlButtons";
-import LayerControl from "./components/LayerControl";
 import DrawPanel from "./components/DrawPanel";
-import FileUploadBox from "./components/FileUploadBox";
 import FilterPanel from "./components/FilterPanel";
 import FeatureTable from "./components/FeatureTable";
-import CesiumMap from "./components/CesiumMap";
-import AuthModal from "./components/AuthModal";
-import Footer from "./components/Footer";
+import ControlButtons from "./components/ControlButtons";
+import FileUploadBox from "./components/FileUploadBox";
 import shp from "shpjs";
 import { GeoJSON } from "ol/format";
+import { Vector as VectorSource } from "ol/source";
 
 function UploadableMap() {
   const [map, setMap] = useState(null);
@@ -26,47 +22,66 @@ function UploadableMap() {
   const [showFilter, setShowFilter] = useState(false);
   const [showTable, setShowTable] = useState(false);
   const [showUpload, setShowUpload] = useState(false);
-  const [showLayerControl, setShowLayerControl] = useState(false);
   const [showDrawPanel, setShowDrawPanel] = useState(false);
-  const [showCesium, setShowCesium] = useState(false);
   const [mouseCoord, setMouseCoord] = useState(null);
   const [error, setError] = useState(null);
-  const [user, setUser] = useState(null);
-  const [showLoginModal, setShowLoginModal] = useState(false);
   const [layer, setLayer] = useState("osm");
   const [drawType, setDrawType] = useState(null);
   const [isDrawing, setIsDrawing] = useState(false);
-  const [layerVisibility, setLayerVisibility] = useState({ main: true, drawings: true });
+  const [layerVisibility, setLayerVisibility] = useState({
+    main: true,
+    drawings: true,
+  });
 
-  const applyFilters = useCallback((currentFilters) => {
-    if (!currentFilters || !currentFilters.length) {
-      setFilteredFeatures(features);
-      return;
-    }
-    const newFiltered = features.filter((f) => {
-      const props = f.getProperties();
-      const evaluations = currentFilters.map((filt) => {
-        const val = props[filt.key];
-        if (val === undefined || val === null) return false;
-        const filterValue = isNaN(filt.value) ? filt.value : parseFloat(filt.value);
-        const propValue = isNaN(val) ? val : parseFloat(val);
-        switch (filt.operator) {
-          case "eq":
-            return String(propValue).toLowerCase() === String(filterValue).toLowerCase();
-          case "gt":
-            return Number(propValue) > Number(filterValue);
-          case "lt":
-            return Number(propValue) < Number(filterValue);
-          case "contains":
-            return String(propValue).toLowerCase().includes(String(filterValue).toLowerCase());
-          default:
-            return false;
-        }
+  const [savedGeojsonData, setSavedGeojsonData] = useState(null);
+  const [drawSource] = useState(() => new VectorSource());
+
+  const applyFilters = useCallback(
+    (currentFilters) => {
+      if (!currentFilters || !currentFilters.length) {
+        setFilteredFeatures(features);
+        return;
+      }
+
+      const newFiltered = features.filter((f) => {
+        const props = f.getProperties();
+        const evaluations = currentFilters.map((filt) => {
+          const val = props[filt.key];
+          if (val === undefined || val === null) return false;
+
+          const filterValue = isNaN(filt.value)
+            ? filt.value
+            : parseFloat(filt.value);
+          const propValue = isNaN(val) ? val : parseFloat(val);
+
+          switch (filt.operator) {
+            case "eq":
+              return (
+                String(propValue).toLowerCase() ===
+                String(filterValue).toLowerCase()
+              );
+            case "gt":
+              return Number(propValue) > Number(filterValue);
+            case "lt":
+              return Number(propValue) < Number(filterValue);
+            case "contains":
+              return String(propValue)
+                .toLowerCase()
+                .includes(String(filterValue).toLowerCase());
+            default:
+              return false;
+          }
+        });
+
+        return filterLogic === "AND"
+          ? evaluations.every(Boolean)
+          : evaluations.some(Boolean);
       });
-      return filterLogic === "AND" ? evaluations.every(Boolean) : evaluations.some(Boolean);
-    });
-    setFilteredFeatures(newFiltered);
-  }, [filterLogic, features]);
+
+      setFilteredFeatures(newFiltered);
+    },
+    [filterLogic, features]
+  );
 
   const clearFilters = useCallback(() => {
     setFilters([]);
@@ -75,7 +90,12 @@ function UploadableMap() {
 
   const handleFileUpload = useCallback((files) => {
     const fileList = Array.from(files);
-    const isShapefile = fileList.some((file) => file.name.endsWith(".shp") || file.name.endsWith(".dbf") || file.name.endsWith(".shx"));
+    const isShapefile = fileList.some(
+      (file) =>
+        file.name.endsWith(".shp") ||
+        file.name.endsWith(".dbf") ||
+        file.name.endsWith(".shx")
+    );
     const isGeojson = fileList.some((file) => file.name.endsWith(".geojson"));
 
     if (isShapefile) {
@@ -84,65 +104,99 @@ function UploadableMap() {
         setError("فایل .shp مورد نیاز است");
         return;
       }
+
       const reader = new FileReader();
       reader.onload = async (event) => {
         try {
           const buffer = event.target.result;
           const geojson = await shp(buffer);
           const geojsonText = JSON.stringify(geojson);
-          localStorage.setItem("geojson", geojsonText);
-          setFeatures(new GeoJSON().readFeatures(geojsonText, { featureProjection: "EPSG:3857" }));
+
+          setSavedGeojsonData(geojsonText);
+          setFeatures(
+            new GeoJSON().readFeatures(geojsonText, {
+              featureProjection: "EPSG:3857",
+            })
+          );
+          setError(null);
+          setShowUpload(false);
         } catch (error) {
+          console.error(error);
           setError("خطا در خواندن فایل Shapefile");
         }
       };
       reader.onerror = () => setError("خطا در خواندن فایل");
       reader.readAsArrayBuffer(shpFile);
     } else if (isGeojson) {
-      const geojsonFile = fileList.find((file) => file.name.endsWith(".geojson"));
+      const geojsonFile = fileList.find((file) =>
+        file.name.endsWith(".geojson")
+      );
       if (!geojsonFile) {
         setError("لطفاً فایل GeoJSON یا Shapefile آپلود کنید");
         return;
       }
+
       const reader = new FileReader();
       reader.onload = (event) => {
         const text = event.target.result;
-        localStorage.setItem("geojson", text);
-        setFeatures(new GeoJSON().readFeatures(text, { featureProjection: "EPSG:3857" }));
+        setSavedGeojsonData(text);
+
+        try {
+          setFeatures(
+            new GeoJSON().readFeatures(text, {
+              featureProjection: "EPSG:3857",
+            })
+          );
+          setError(null);
+          setShowUpload(false);
+        } catch (error) {
+          console.error(error);
+          setError("فایل GeoJSON نامعتبر است");
+        }
       };
       reader.onerror = () => setError("خطا در خواندن فایل");
       reader.readAsText(geojsonFile);
     } else {
       setError("لطفاً فایل GeoJSON یا Shapefile آپلود کنید");
     }
-  }, [setError, setFeatures]);
+  }, []);
+
+  const zoomToFeature = useCallback(
+    (feature) => {
+      if (!map || !feature) return;
+      const geometry = feature.getGeometry();
+      if (geometry) {
+        map.getView().fit(geometry.getExtent(), {
+          padding: [100, 100, 100, 100],
+          duration: 1000,
+          maxZoom: 16,
+        });
+      }
+    },
+    [map]
+  );
 
   useEffect(() => {
     setFilteredFeatures(features);
-    const keys = features.length ? Object.keys(features[0].getProperties()).filter((k) => k !== "geometry") : [];
+    const keys = features.length
+      ? Object.keys(features[0].getProperties()).filter((k) => k !== "geometry")
+      : [];
     setAttributeKeys(keys);
   }, [features]);
 
   return (
-    <div className="d-flex flex-column min-vh-100 GeoProject">
-      <NavBar user={user} setUser={setUser} setShowLoginModal={setShowLoginModal} setShowCesium={setShowCesium} />
-      <div className="container-fluid py-3 flex-grow-1">
-        {error && (
-          <div className="alert alert-danger" role="alert">
-            <i className="fas fa-exclamation-triangle me-2"></i>
-            {error}
-            <button type="button" className="btn-close" onClick={() => setError(null)}></button>
-          </div>
-        )}
-        <ControlButtons
-          map={map}
-          setShowFilter={setShowFilter}
-          setShowTable={setShowTable}
-          setShowUpload={setShowUpload}
-          setShowLayerControl={setShowLayerControl}
-          setShowDrawPanel={setShowDrawPanel}
-          setShowCesium={setShowCesium}
-        />
+    <div
+      style={{
+        width: "100%",
+        height: "100vh",
+        position: "relative",
+        overflow: "hidden",
+        display: "flex",
+        flexDirection: "column",
+      }}
+    >
+      {/* نقشه */}
+      <div style={{ flex: 1, width: "100%", height: "100%", position: "relative" }}>
         <MapContainer
           map={map}
           setMap={setMap}
@@ -164,66 +218,123 @@ function UploadableMap() {
           layerVisibility={layerVisibility}
           setLayerVisibility={setLayerVisibility}
           handleFileUpload={handleFileUpload}
+          drawSource={drawSource}
+          savedGeojsonData={savedGeojsonData}
+          setSavedGeojsonData={setSavedGeojsonData}
         />
-        {showLayerControl && (
-          <LayerControl layer={layer} setLayer={setLayer} layerVisibility={layerVisibility} setLayerVisibility={setLayerVisibility} />
-        )}
-        {showDrawPanel && (
-          <DrawPanel
-            map={map}
-            drawType={drawType}
-            setDrawType={setDrawType}
-            isDrawing={isDrawing}
-            setIsDrawing={setIsDrawing}
-            setError={setError}
-          />
-        )}
-        {showFilter && (
-          <FilterPanel
-            filters={filters}
-            setFilters={setFilters}
-            filterLogic={filterLogic}
-            setFilterLogic={setFilterLogic}
-            applyFilters={applyFilters}
-            clearFilters={clearFilters}
-            attributeKeys={attributeKeys}
-          />
-        )}
-        {showTable && (
-          <FeatureTable
-            filteredFeatures={filteredFeatures}
-            zoomToFeature={(feature) => map?.getView().fit(feature.getGeometry().getExtent(), { padding: [50, 50, 50, 50], maxZoom: 17, duration: 1000 })}
-          />
-        )}
-        {showUpload && <FileUploadBox onFileUpload={handleFileUpload} />}
-        {showCesium && <CesiumMap onClose={() => setShowCesium(false)} />}
+
+        {/* مختصات موس */}
         {mouseCoord && (
-          <div className="text-muted small mt-2">
-            <i className="fas fa-map-pin me-2"></i>طول: {mouseCoord[0].toFixed(5)}، عرض: {mouseCoord[1].toFixed(5)}
+          <div
+            style={{
+              position: "absolute",
+              bottom: "15px",
+              left: "15px",
+              background: "rgba(255, 255, 255, 0.95)",
+              padding: "10px 16px",
+              borderRadius: "8px",
+              fontSize: "12px",
+              fontFamily: "monospace",
+              boxShadow: "0 2px 8px rgba(0, 0, 0, 0.2)",
+              zIndex: 8000,
+              direction: "ltr",
+              border: "1px solid #ddd",
+            }}
+          >
+            <strong>طول:</strong> {mouseCoord[0].toFixed(5)} |{" "}
+            <strong>عرض:</strong> {mouseCoord[1].toFixed(5)}
           </div>
         )}
       </div>
-      <Footer />
-      <AuthModal
-        show={showLoginModal}
-        onClose={() => setShowLoginModal(false)}
-        onLogin={(data) => {
-          if (data.username && data.password) {
-            setUser({ name: data.username });
-            setShowLoginModal(false);
-          } else {
-            setError("نام کاربری و رمز عبور لازم است");
-          }
-        }}
-        onRegister={(data) => {
-          if (data.name && data.email && data.password) {
-            setUser({ name: data.name });
-            setShowLoginModal(false);
-          } else {
-            setError("تمام فیلدها را پر کنید");
-          }
-        }}
+
+      {/* دکمه‌های کنترل */}
+      <ControlButtons
+        map={map}
+        setShowFilter={setShowFilter}
+        setShowTable={setShowTable}
+        setShowUpload={setShowUpload}
+        setShowDrawPanel={setShowDrawPanel}
       />
+
+      {/* پنل‌های Draggable */}
+      {showUpload && (
+        <FileUploadBox
+          onFileUpload={handleFileUpload}
+          onClose={() => setShowUpload(false)}
+        />
+      )}
+
+      {showFilter && (
+        <FilterPanel
+          filters={filters}
+          setFilters={setFilters}
+          filterLogic={filterLogic}
+          setFilterLogic={setFilterLogic}
+          applyFilters={applyFilters}
+          clearFilters={clearFilters}
+          attributeKeys={attributeKeys}
+          onClose={() => setShowFilter(false)}
+        />
+      )}
+
+      {showTable && (
+        <FeatureTable
+          filteredFeatures={filteredFeatures}
+          zoomToFeature={zoomToFeature}
+          onClose={() => setShowTable(false)}
+          isFiltered={filteredFeatures.length < features.length && features.length > 0}
+        />
+      )}
+
+      {/* DrawPanel */}
+      <DrawPanel
+        map={map}
+        drawType={drawType}
+        setDrawType={setDrawType}
+        isDrawing={isDrawing}
+        setIsDrawing={setIsDrawing}
+        setError={setError}
+        drawSource={drawSource}
+      />
+
+      {/* پیام خطا */}
+      {error && (
+        <div
+          style={{
+            position: "fixed",
+            top: "20px",
+            right: "20px",
+            background: "linear-gradient(135deg, #C2185B 0%, #AD1457 100%)",
+            color: "white",
+            padding: "16px 20px",
+            borderRadius: "8px",
+            boxShadow: "0 4px 16px rgba(0, 0, 0, 0.3)",
+            zIndex: 10000,
+            display: "flex",
+            alignItems: "center",
+            gap: "15px",
+            maxWidth: "450px",
+            animation: "slideIn 0.3s ease",
+          }}
+        >
+          <span style={{ fontSize: "20px" }}>⚠️</span>
+          <span style={{ flex: 1, fontSize: "14px" }}>{error}</span>
+          <button
+            onClick={() => setError(null)}
+            style={{
+              background: "rgba(255, 255, 255, 0.2)",
+              border: "none",
+              color: "white",
+              fontSize: "18px",
+              cursor: "pointer",
+              padding: "0 8px",
+              lineHeight: 1,
+            }}
+          >
+            ✕
+          </button>
+        </div>
+      )}
     </div>
   );
 }
